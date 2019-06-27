@@ -23,7 +23,7 @@
       </v-flex>
       <v-flex>
         <v-upload
-          v-model="brand.image" url="/item/upload" :multiple="false" :pic-width="250" :pic-height="90"
+          v-model="brand.image" url="/upload/image" :multiple="false" :pic-width="250" :pic-height="90"
         />
       </v-flex>
     </v-layout>
@@ -74,20 +74,22 @@
       submit() {
         // 表单校验
         if (this.$refs.brandForm.validate()) {
-          this.brand.categories = this.brand.categories.map(c => c.id);
-          this.brand.letter = this.brand.letter.toUpperCase();
-          // 将数据提交到后台
-          this.$http({
-            method: this.isEdit ? 'put' : 'post',
-            url: '/item/brand',
-            data: this.$qs.stringify(this.brand)
-          }).then(() => {
-            // 关闭窗口
-            this.$message.success("保存成功！");
-            this.closeWindow();
-          }).catch(() => {
-            this.$message.error("保存失败！");
-          });
+          // 2、定义一个请求参数对象，通过解构表达式来获取brand中的属性
+          const {categories ,letter ,...params} = this.brand;
+          // 3、数据库中只要保存分类的id即可，因此我们对categories的值进行处理,只保留id，并转为字符串
+          params.cids = categories.map(c => c.id).join(",");
+          // 4、将字母都处理为大写
+          params.letter = letter.toUpperCase();
+          // 5、将数据提交到后台
+          this.$http.post('/item/brand', this.$qs.stringify(params))
+            .then(() => {
+              // 6、弹出提示
+              this.$emit("close");
+              this.$message.success("保存成功！");
+            })
+            .catch(() => {
+              this.$message.error("保存失败！");
+            });
         }
       },
       clear() {
@@ -110,5 +112,4 @@
 </script>
 
 <style scoped>
-
 </style>

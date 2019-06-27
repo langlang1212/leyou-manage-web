@@ -8,15 +8,15 @@
         label="搜索"
         single-line
         hide-details
-        v-model="search"
+        v-model="key"
       />
     </v-card-title>
     <v-divider/>
     <v-data-table
       :headers="headers"
-      :items="items"
+      :items="brands"
       :pagination.sync="pagination"
-      :total-items="totalItems"
+      :total-items="totalBrands"
       :loading="loading"
       class="elevation-1"
     >
@@ -60,7 +60,7 @@
         </v-toolbar>
         <v-card-text class="px-5 py-2">
           <!-- 表单 -->
-          <brand-form :oldBrand="brand" :isEdit="isEdit" @close="show = false" :reload="getDataFromApi"/>
+          <brand-form :oldBrand="brand" :isEdit="isEdit" @close="show = false" :reload="loadBrands"/>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -93,16 +93,68 @@
         ],
         show: false,// 是否弹出窗口
         brand: {}, // 品牌信息
-        isEdit: false // 判断是编辑还是新增
+        isEdit: false, // 判断是编辑还是新增
+
+        brands : [],
+        totalBrands : 0,
+        key : "",
       }
     },
+    created(){
+      this.brands = [
+        {
+          id: 2032,
+          name: "OPPO",
+          image: "1.jpg",
+          letter: "O"
+        },
+        {
+          id: 2033,
+          name: "飞利浦（PHILIPS）",
+          image: "2.jpg",
+          letter: "F"
+        },
+        {
+          id: 2034,
+          name: "华为（HUAWEI）",
+          image: "3.jpg",
+          letter: "H"
+        },
+        {
+          id: 2036,
+          name:"酷派（Coolpad）",
+          image: "4.jpg",
+          letter: "K"
+        },
+        {
+          id: 2037,
+          name: "魅族（MEIZU）",
+          image: "5.jpg",
+          letter: "M"
+        }
+      ];
+      this.totalBrands = 15;
+
+      //去后台查询
+      this.loadBrands();
+    },
     watch: {
+      key(){
+        this.pagination.page = 1;
+        this.loadBrands();
+      },
       pagination: {
+        deep : true,
+        handler(){
+          this.loadBrands();
+        }
+      },
+      /*pagination: {
         handler() {
           this.getDataFromApi();
         },
         deep: true
-      },
+      },*/
       search: {
         handler() {
           this.getDataFromApi();
@@ -119,6 +171,23 @@
       this.getDataFromApi();
     },
     methods: {
+      loadBrands(){
+        this.loading = true;
+        this.$http.get("/item/brand/page",{
+          params: {
+            //搜索条件
+            page: this.pagination.page,  //当前页
+            rows: this.pagination.rowsPerPage, //每页大小
+            sortBy: this.pagination.sortBy,  //排序字段
+            desc : this.pagination.descending, //是否降序
+            key: this.key,
+          }
+        }).then(resp => {
+          this.brands = resp.data.items;
+          this.totalBrands = resp.data.total;
+          this.loading = false;
+        });
+      },
       addBrand() {
         this.brand = {};
         this.isEdit = false;
