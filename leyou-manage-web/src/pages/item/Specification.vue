@@ -130,7 +130,7 @@
         // 判断点击的节点是否是父节点（只有点击到叶子节点才会弹窗）
         if (!node.isParent) {
           // 如果是叶子节点，那么就发起ajax请求，去后台查询商品规格数据。
-          this.$http.get("/item/spec/" + node.id)
+          this.$http.get("/item/spec/groups/" + node.id)
             .then(resp => {
               // 查询成功后，把响应结果赋值给specifications属性，Vue会进行自动渲染。
               this.specifications = resp.data;
